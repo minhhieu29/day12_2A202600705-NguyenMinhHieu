@@ -84,9 +84,10 @@ Client → Nginx (:80) → Agent (:8000) → Redis (:6379)
 
 ### Exercise 3.1: Railway deployment
 
-- **URL:** *(Cập nhật sau khi deploy — xem DEPLOYMENT.md)*
+- **URL:** https://day122a202600705-nguyenminhhieu-production.up.railway.app
 - **Platform:** Railway
-- **Config file:** `railway.toml` — định nghĩa builder, startCommand, healthcheckPath
+- **Config file:** `railway.toml` (root) + `Dockerfile` (root) — builder DOCKERFILE, startCommand `/app/start.sh`
+- **Screenshot:** [screenshots/dashboard.png](screenshots/dashboard.png), [screenshots/running.png](screenshots/running.png)
 
 ### Exercise 3.2: So sánh render.yaml vs railway.toml
 
@@ -114,15 +115,18 @@ Client → Nginx (:80) → Agent (:8000) → Redis (:6379)
 - **Nếu sai key:** HTTP 401 `Invalid or missing API key`
 - **Rotate key:** Đổi `AGENT_API_KEY` trong env vars (Railway/Render dashboard), restart service — không cần sửa code
 
-**Test results:**
-```bash
-# Không có key → 401
-curl http://localhost:8080/ask -X POST -H "Content-Type: application/json" -d '{"user_id":"test","question":"Hello"}'
-# {"detail":"Invalid or missing API key..."}
+**Test results (Production — xem `screenshots/test.png`):**
+```
+GET  /health  → 200  {"status":"ok","environment":"production"}
+GET  /ready   → 200  {"ready":true}
+POST /ask (no key)  → 401  Invalid or missing API key
+POST /ask (with key) → 200  mock LLM answer returned
+```
 
-# Có key → 200
-curl http://localhost:8080/ask -X POST -H "X-API-Key: dev-key-change-me" -H "Content-Type: application/json" -d '{"user_id":"test","question":"Hello"}'
-# {"question":"Hello","answer":"...","model":"gpt-4o-mini",...}
+**Rate limit test (xem `screenshots/rate-limit.png`):**
+```
+Request 1-10  → HTTP 200
+Request 11-12 → HTTP 429  Rate limit exceeded: 10 req/min
 ```
 
 ### Exercise 4.2: JWT authentication (Advanced)
