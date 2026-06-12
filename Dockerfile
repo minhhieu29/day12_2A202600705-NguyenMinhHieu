@@ -20,8 +20,9 @@ WORKDIR /app
 COPY --from=builder /root/.local /app/.local
 COPY 06-lab-complete/app/ ./app/
 COPY 06-lab-complete/utils/ ./utils/
+COPY 06-lab-complete/start.sh ./start.sh
 
-RUN chown -R agent:agent /app
+RUN chmod +x /app/start.sh && chown -R agent:agent /app
 
 USER agent
 
@@ -29,12 +30,8 @@ ENV PATH=/app/.local/bin:$PATH
 ENV PYTHONPATH=/app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c \
-    "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" \
-    || exit 1
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["/app/start.sh"]

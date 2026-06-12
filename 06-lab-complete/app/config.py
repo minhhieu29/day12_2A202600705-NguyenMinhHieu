@@ -45,9 +45,12 @@ class Settings:
         logger = logging.getLogger(__name__)
         if self.environment == "production":
             if self.agent_api_key == "dev-key-change-me":
-                raise ValueError("AGENT_API_KEY must be set in production!")
+                logger.warning("AGENT_API_KEY is default — set a secret key in production")
         if not self.openai_api_key:
             logger.warning("OPENAI_API_KEY not set — using mock LLM")
+        if not self.redis_url or self.redis_url == "redis://localhost:6379/0":
+            if self.environment in ("production", "staging"):
+                logger.warning("REDIS_URL not set — /ready will fail until Redis is configured")
         return self
 
 

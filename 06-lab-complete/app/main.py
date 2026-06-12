@@ -73,10 +73,15 @@ async def lifespan(app: FastAPI):
         "version": settings.app_version,
         "environment": settings.environment,
     }))
-    if not ping_redis():
-        raise RuntimeError("Cannot connect to Redis")
-    _is_ready = True
-    logger.info(json.dumps({"event": "ready", "instance": INSTANCE_ID}))
+    if ping_redis():
+        _is_ready = True
+        logger.info(json.dumps({"event": "ready", "instance": INSTANCE_ID}))
+    else:
+        logger.error(json.dumps({
+            "event": "redis_unavailable",
+            "instance": INSTANCE_ID,
+            "hint": "Set REDIS_URL environment variable",
+        }))
 
     yield
 
